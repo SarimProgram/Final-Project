@@ -1,0 +1,86 @@
+// Pin Definitions
+
+#define HCSR04_PIN_TRIG	D2
+#define HCSR04_PIN_ECHO	D6
+
+int sound = 0;
+int led = D5;
+int state = 0;
+
+
+int inputPin = D4;    
+int pir = D4;          // we start, assuming no motion detected
+int val = 0;    
+int calibrateTime = 5000;
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+ pinMode(inputPin, INPUT); 
+  pinMode(HCSR04_PIN_TRIG, OUTPUT);
+  pinMode(HCSR04_PIN_ECHO, INPUT);
+pinMode(pir, INPUT_PULLDOWN);
+pinMode(led, OUTPUT);
+digitalWrite(led, LOW);
+  Particle.subscribe("SIT210_ParkingSensor", Sarim_ParkingSensor_Handler);
+  
+}
+
+void loop() {
+    
+  
+  val = digitalRead(inputPin);  
+  if (val == 0) {
+    
+    
+    Particle.publish("motion","0");
+    delay(1000);
+  }
+  
+  else if (val == HIGH) {     
+      Particle.publish("motion detected","1");
+long timeTaken, distance;
+  digitalWrite(HCSR04_PIN_TRIG, LOW);
+  delayMicroseconds(2);
+  digitalWrite(HCSR04_PIN_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(HCSR04_PIN_TRIG, LOW);
+  timeTaken = pulseIn(HCSR04_PIN_ECHO, HIGH);//determine distance of wave
+  distance = (timeTaken/2)/29.1;//using timeTaken calc distance of object
+
+    if(distance<=15)
+    {
+       Particle.publish("SIT210_ParkingSensor","Breach",PUBLIC);
+    }
+    else
+    {
+      Particle.publish("SIT210_ParkingSensor","Clear",PUBLIC);
+      
+    }
+    delay(1000);
+    }
+        
+     } 
+  
+     
+    void Sarim_ParkingSensor_Handler(const char *event, const char *data)
+{
+   digitalWrite(led,HIGH);
+   
+    if (strcmp(data,"Clear")==0) {
+        
+        // if the car is far away, then turn your board LED and buzzer off
+       digitalWrite(led,LOW);
+    }
+    else if (strcmp(data,"Warning")==0) {
+        // if the car is under 60 cm away, turn your board LED and buzzer on
+        digitalWrite(led,HIGH);
+       
+    }
+    else {
+      
+        // if the data is something else, don't do anything.
+        // Really the data shouldn't be anything but those two listed above.
+    }
+    delay(1000);
+}
+
