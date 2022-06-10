@@ -49,7 +49,7 @@ long timeTaken, distance;
 
     if(distance<=15)
     {
-       Particle.publish("SIT210_ParkingSensor","Breach",PUBLIC);
+       Particle.publish("SIT210_ParkingSensor","Warning",PUBLIC);
     }
     else
     {
